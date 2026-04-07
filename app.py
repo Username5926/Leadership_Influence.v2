@@ -50,11 +50,32 @@ def compute(scores):
 # ══════════════════════════════════════════════════════════════════
 # 파싱 — 새 형태: 개인별 엑셀 대시보드 (A열=문항번호, C열=응답값)
 # ══════════════════════════════════════════════════════════════════
+# 엑셀 시트명에 사용 불가한 문자
+_INVALID_SHEET_CHARS = re.compile(r'[\[\]:*?/\\]')
+
+def sanitize_sheet_name(name: str) -> str:
+    """엑셀 시트명 불가 문자 제거 후 31자 제한"""
+    return _INVALID_SHEET_CHARS.sub('', name)[:31]
+
 def extract_name_from_filename(filename: str) -> str:
-    """파일명에서 팀_이름 추출. 예) _사전과제2___LX인터내셔널__영향력_진단_ESS팀_장주민.xlsx → ESS팀_장주민"""
+    """파일명에서 팀_이름 추출.
+
+    지원 형식 예시:
+      _사전과제2___LX인터내셔널__영향력_진단_ESS팀_장주민.xlsx     → ESS팀_장주민
+      (사전과제2) (LX인터내셔널) 영향력 진단_E Trading팀_김광진.xlsx → E Trading팀_김광진
+      사전과제2_(LX인터내셔널) 영향력 진단_포승그린파워_김세진.xlsx   → 포승그린파워_김세진
+      [사전과제] 영향력_진단_기획부_이민수.xlsx                    → 기획부_이민수
+    """
     stem = os.path.splitext(filename)[0]
-    parts = [p for p in stem.split('_') if p]
-    team_idx = next((i for i, p in enumerate(parts) if '팀' in p or '부' in p or '실' in p), None)
+    # 괄호 제거 (공백은 팀명 일부일 수 있으므로 보존, _로만 분리)
+    cleaned = re.sub(r'[\(\)\[\]]', '', stem)
+    parts = [p.strip() for p in cleaned.split('_') if p.strip()]
+
+    TEAM_KEYWORDS = ('팀', '부', '실', '파워', '그룹', '센터', '본부', '과')
+    team_idx = next(
+        (i for i, p in enumerate(parts) if any(p.endswith(kw) for kw in TEAM_KEYWORDS)),
+        None
+    )
     if team_idx is not None and team_idx + 1 < len(parts):
         return f"{parts[team_idx]}_{parts[team_idx+1]}"
     # fallback: 마지막 두 segment
@@ -116,7 +137,7 @@ def build_excel(people, excel_tpl: bytes) -> bytes:
     wb = openpyxl.Workbook(); wb.remove(wb.active)
     for p in people:
         src = load_workbook(io.BytesIO(excel_tpl)).worksheets[0]
-        ws  = _copy_ws(wb, src, p["name"][:31])
+        ws  = _copy_ws(wb, src, sanitize_sheet_name(p["name"]))
         r   = compute(p["scores"])
         ws.cell(1,1).value = p["name"]
         for q in range(1, 31):
@@ -437,14 +458,7 @@ if response_files:
     st.info(f"📂 {len(response_files)}개 파일 선택됨")
     with st.expander("선택된 파일 목록 확인"):
         for f in response_files:
-            parts = [p for p in os.path.splitext(f.name)[0].split('_') if p]
-            team_idx = next((i for i, p in enumerate(parts) if '팀' in p or '부' in p or '실' in p), None)
-            if team_idx is not None and team_idx + 1 < len(parts):
-                label = f"{parts[team_idx]}_{parts[team_idx+1]}"
-            elif len(parts) >= 2:
-                label = f"{parts[-2]}_{parts[-1]}"
-            else:
-                label = f.name
+            label = sanitize_sheet_name(extract_name_from_filename(f.name))
             st.write(f"  ✅ `{f.name}` → 시트명: **{label}**")
 
 st.markdown("---")
