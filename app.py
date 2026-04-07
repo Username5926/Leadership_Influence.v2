@@ -407,7 +407,7 @@ def find_template(ext: str):
 # ══════════════════════════════════════════════════════════════════
 # UI
 # ══════════════════════════════════════════════════════════════════
-st.set_page_config(page_title="CLiCK _ 리더십 영향력 진단 결과 자동화 (개인 엑셀 파일용)", layout="wide")
+st.set_page_config(page_title="리더십 영향력 진단 결과 자동화 (개인 엑셀 파일용)", layout="wide")
 
 with st.sidebar:
     st.markdown("### 📋 문항 매핑 참고")
