@@ -407,7 +407,7 @@ def find_template(ext: str):
 # ══════════════════════════════════════════════════════════════════
 # UI
 # ══════════════════════════════════════════════════════════════════
-st.set_page_config(page_title="CLiCK _ 리더십 영향력 진단 결과 자동화 (구글 폼 응답용)", layout="wide")
+st.set_page_config(page_title="CLiCK _ 리더십 영향력 진단 결과 자동화 (개인 엑셀 파일용)", layout="wide")
 
 with st.sidebar:
     st.markdown("### 📋 문항 매핑 참고")
@@ -436,17 +436,17 @@ with st.sidebar:
     else:
         st.info("mapping_strategy.jpg를 GitHub 루트에 업로드해주세요")
 
-st.title("CLiCK _ 리더십 영향력 진단 결과 자동화 (구글 폼 응답용)")
+st.title("CLiCK _ 리더십 영향력 진단 결과 자동화 (개인 엑셀 파일용)")
 st.markdown("---")
 
 st.info("""
 **📋 업로드 전 확인사항**
-- 이 자동화는 구글 폼 응답 raw 데이터를 대상으로 합니다
-- 구글 폼 응답을 엑셀로 다운로드한 파일을 **여러 개 동시에 선택**해서 업로드해주세요 (1개 파일, 1행=1응답자 형식)
+- 이 자동화는 응답자별 개인 엑셀 파일을 대상으로 합니다
+- 응답자별 개인 엑셀 파일을 **여러 개 동시에 선택**해서 업로드해주세요
+- 파일명 형식: `영향력 진단_팀명_이름.xlsx` (예: `영향력 진단_ㅇㅇ팀_ㅇㅇㅇ.xlsx`)
 - 각 파일의 **A열=문항번호(1-30), C열=응답값(1-5)** 형식이어야 합니다
-- 응답자별 개인 엑셀 파일이 있다면 → [개인 엑셀 파일용 자동화](https://kddzwt4i6xu4rhrmn8zwqm.streamlit.app/#fb014e55)
+- 구글 폼 응답 raw 데이터가 있다면 → [구글 폼 응답용 자동화](https://kddzwt4i6xu4rhrmn8zwqm.streamlit.app/#fb014e55)
 """)
-
 
 response_files = st.file_uploader(
     "응답자 엑셀 파일들 (.xlsx) — 여러 파일 동시 선택 가능",
