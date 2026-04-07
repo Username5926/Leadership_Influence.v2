@@ -60,25 +60,23 @@ def sanitize_sheet_name(name: str) -> str:
 def extract_name_from_filename(filename: str) -> str:
     """파일명에서 팀_이름 추출.
 
+    '영향력 진단_' (또는 '영향력_진단_') 이후 텍스트를 팀_이름으로 사용.
+
     지원 형식 예시:
-      _사전과제2___LX인터내셔널__영향력_진단_ESS팀_장주민.xlsx     → ESS팀_장주민
-      (사전과제2) (LX인터내셔널) 영향력 진단_E Trading팀_김광진.xlsx → E Trading팀_김광진
-      사전과제2_(LX인터내셔널) 영향력 진단_포승그린파워_김세진.xlsx   → 포승그린파워_김세진
-      [사전과제] 영향력_진단_기획부_이민수.xlsx                    → 기획부_이민수
+      _영향력_진단_ESS팀_장주민.xlsx                              → ESS팀_장주민
+      (LX인터내셔널) 영향력 진단_E Trading팀_김광진.xlsx           → E Trading팀_김광진
+      사전과제2_(LX인터내셔널) 영향력 진단_포승그린파워_김세진.xlsx  → 포승그린파워_김세진
     """
     stem = os.path.splitext(filename)[0]
-    # 괄호 제거 (공백은 팀명 일부일 수 있으므로 보존, _로만 분리)
+
+    # '영향력 진단_' 또는 '영향력_진단_' 이후 텍스트 추출
+    m = re.search(r'영향력[\s_]+진단[_\s]+(.+)', stem)
+    if m:
+        return m.group(1).strip()
+
+    # fallback: 괄호 제거 후 마지막 두 _세그먼트
     cleaned = re.sub(r'[\(\)\[\]]', '', stem)
     parts = [p.strip() for p in cleaned.split('_') if p.strip()]
-
-    TEAM_KEYWORDS = ('팀', '부', '실', '파워', '그룹', '센터', '본부', '과')
-    team_idx = next(
-        (i for i, p in enumerate(parts) if any(p.endswith(kw) for kw in TEAM_KEYWORDS)),
-        None
-    )
-    if team_idx is not None and team_idx + 1 < len(parts):
-        return f"{parts[team_idx]}_{parts[team_idx+1]}"
-    # fallback: 마지막 두 segment
     if len(parts) >= 2:
         return f"{parts[-2]}_{parts[-1]}"
     return parts[-1] if parts else stem
@@ -409,7 +407,7 @@ def find_template(ext: str):
 # ══════════════════════════════════════════════════════════════════
 # UI
 # ══════════════════════════════════════════════════════════════════
-st.set_page_config(page_title="리더십 영향력 진단 결과 자동화", layout="wide")
+st.set_page_config(page_title="CLiCK _ 리더십 영향력 진단 결과 자동화 (구글 폼 응답용)", layout="wide")
 
 with st.sidebar:
     st.markdown("### 📋 문항 매핑 참고")
@@ -438,15 +436,17 @@ with st.sidebar:
     else:
         st.info("mapping_strategy.jpg를 GitHub 루트에 업로드해주세요")
 
-st.title("CLiCK _ 리더십 영향력 진단 결과 자동화")
+st.title("CLiCK _ 리더십 영향력 진단 결과 자동화 (구글 폼 응답용)")
 st.markdown("---")
 
-st.markdown("""
+st.info("""
 **📋 업로드 전 확인사항**
-- 응답자별 엑셀 파일을 **여러 개 동시에 선택**해서 업로드해주세요
-- 파일명 형식: `..._팀명_이름.xlsx` (예: `_영향력_진단_ESS팀_장주민.xlsx`)
-- 각 파일의 **A열=문항번호(1~30), C열=응답값(1~5)** 형식이어야 합니다
+- 이 자동화는 구글 폼 응답 raw 데이터를 대상으로 합니다
+- 구글 폼 응답을 엑셀로 다운로드한 파일을 **여러 개 동시에 선택**해서 업로드해주세요 (1개 파일, 1행=1응답자 형식)
+- 각 파일의 **A열=문항번호(1-30), C열=응답값(1-5)** 형식이어야 합니다
+- 응답자별 개인 엑셀 파일이 있다면 → [개인 엑셀 파일용 자동화](https://kddzwt4i6xu4rhrmn8zwqm.streamlit.app/#fb014e55)
 """)
+
 
 response_files = st.file_uploader(
     "응답자 엑셀 파일들 (.xlsx) — 여러 파일 동시 선택 가능",
